@@ -33,6 +33,7 @@ the game is back to normal.
 ## Requirements
 
 - Tormented Souls 2 (Steam, Windows).
+- Gamepad: an Xbox-style controller (XInput) is assumed; button names (A / B / X, LB / RB, stick clicks) are Xbox names. Other controllers are untested (they may work if the game sees them as an Xbox controller, e.g. through Steam Input).
 - UE4SS, official **experimental-latest** build `UE4SS_v3.0.1-1217-g4fb9b615.zip` (not the `zDEV-` one). Not included.
   Get it from <https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest>. Tested with a clean install
   of exactly that zip. The older v3.0.0 / v3.0.1 tag releases are untested.

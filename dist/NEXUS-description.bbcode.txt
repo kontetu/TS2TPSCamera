@@ -24,6 +24,7 @@ Replaces Tormented Souls 2's fixed camera angles with a camera behind the charac
 [size=4][b]Requirements[/b][/size]
 [list]
 [*]Tormented Souls 2 (Steam, Windows).
+[*]Gamepad: an Xbox-style controller (XInput) is assumed; button names (A / B / X, LB / RB, stick clicks) are Xbox names. Other controllers are untested (they may work if the game sees them as an Xbox controller, e.g. through Steam Input).
 [*]UE4SS, official [b]experimental-latest[/b] build [b]UE4SS_v3.0.1-1217-g4fb9b615.zip[/b] (not the zDEV- one). Not included. Get it here: [url=https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest]https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest[/url]
 Tested with a clean install of exactly that zip. The older v3.0.0 / v3.0.1 tag releases are untested.
 [/list]

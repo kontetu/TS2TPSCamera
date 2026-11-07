@@ -22,6 +22,7 @@ UE4SS の Lua MOD です。ゲームのファイルやセーブは**書き換え
 
 - Tormented Souls 2（Steam、Windows）。`TormentedSouls2-Win64-Shipping.exe` の SHA-256 が
   `6C71AB55143ADD71E56C9477CDBFCB8F44E16D8D5C4DF7C8C678396A6275CB4F` のビルドで開発しました。ゲームのアップデートで動かなくなる可能性があります。
+- **パッドは Xbox 系コントローラー（XInput）を前提にしています。** 説明のボタン名（A / B / X、LB / RB、右・左スティック押し込み）は Xbox の名前です。それ以外のコントローラーは未確認です。ゲームから Xbox コントローラーとして見える状態（たとえば Steam Input 経由）なら動く可能性があります。
 - **UE4SS**: 公式の **experimental-latest** ビルド `UE4SS_v3.0.1-1217-g4fb9b615.zip`（`zDEV-` が付いていない方）。
   入手先: <https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest>
   Lua の遅延実行 API（`LoopInGameThreadWithDelay`）が必要で、`dwmapi.dll` だけが実行ファイルの隣、残りが `ue4ss` フォルダ内という配置です。

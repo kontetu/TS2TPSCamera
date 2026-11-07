@@ -26,6 +26,7 @@ game executable. Delete them (see "Uninstall") and the game is exactly as it was
 - Tormented Souls 2 (Steam, Windows). Developed against the build whose
   `TormentedSouls2-Win64-Shipping.exe` has the SHA-256
   `6C71AB55143ADD71E56C9477CDBFCB8F44E16D8D5C4DF7C8C678396A6275CB4F`. A game update may break the mod.
+- **Gamepad: an Xbox-style controller (XInput) is assumed.** Button names in these docs (A / B / X, LB / RB, right/left stick click) are Xbox names. Other controllers are untested; they may work if the game sees them as an Xbox controller (for example through Steam Input).
 - **UE4SS** - the official **experimental-latest** build: `UE4SS_v3.0.1-1217-g4fb9b615.zip` (not the `zDEV-` one)
   from <https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest>.
   It needs the Lua delayed-action API (`LoopInGameThreadWithDelay`) and the layout where only `dwmapi.dll`
