@@ -1,0 +1,60 @@
+[size=5][b]Third-Person Camera[/b][/size]
+
+Replaces Tormented Souls 2's fixed camera angles with a camera behind the character. Look around 360 degrees with the mouse or the right stick.
+
+[b]It changes no game or save file.[/b] Delete the mod folder (or switch "TPS camera" off in the F1 screen) and the game is back to normal.
+
+[size=4][b]Features[/b][/size]
+[list]
+[*]360-degree look with the mouse or the right stick; left stick / WASD move relative to the camera.
+[*]Aiming swings the camera to the enemy the game locked on to, then you can look around freely.
+[*]Movies, scripted events, puzzles and QTEs keep the original camera and hand back seamlessly.
+[*]Stays in third person while examining eye-mark objects, climbing ladders, pushing carts and while grabbed.
+[*]Right stick click puts the camera behind the character; optional auto-turn behind you while moving.
+[*]F1 settings screen: camera position, sensitivity, inversion, dead zone. Settings are saved.
+[*]Japanese / English settings screen (follows the game language).
+[/list]
+
+[size=4][b]Beta notes[/b][/size]
+[list]
+[*]The levels were built for fixed cameras: expect some odd views (missing geometry behind the character, low ceilings, narrow corridors).
+[*]Not every scene has been tested.
+[/list]
+
+[size=4][b]Requirements[/b][/size]
+[list]
+[*]Tormented Souls 2 (Steam, Windows).
+[*]UE4SS, official [b]experimental-latest[/b] build [b]UE4SS_v3.0.1-1217-g4fb9b615.zip[/b] (not the zDEV- one). Not included. Get it here: [url=https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest]https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest[/url]
+Tested with a clean install of exactly that zip. The older v3.0.0 / v3.0.1 tag releases are untested.
+[/list]
+
+[size=4][b]Installation[/b][/size]
+[list=1]
+[*]Close the game. Install UE4SS: put [b]dwmapi.dll[/b] and the [b]ue4ss[/b] folder from the UE4SS zip next to TormentedSouls2-Win64-Shipping.exe (...\Tormented Souls 2\TormentedSouls2\Binaries\Win64). Skip this if UE4SS is already installed.
+[*]Extract this mod's zip, then copy its [b]ue4ss[/b] folder into the same Win64 folder (merge / overwrite).
+[*]Start the game, load a save, press [b]F1[/b] for the settings.
+[/list]
+
+[size=4][b]Controls[/b][/size]
+[list]
+[*]Look: right stick / mouse
+[*]Move: left stick / WASD (camera relative)
+[*]Weapon select: D-pad / number keys 1-4
+[*]Camera behind the character: right stick click
+[*]Flashlight: left stick click (gamepad) / F (keyboard)
+[*]Settings: F1 (keyboard)
+[/list]
+
+[size=4][b]Uninstall[/b][/size]
+Delete [b]Win64\ue4ss\Mods\TS2TPSCamera[/b] (and dwmapi.dll + the ue4ss folder if you want UE4SS gone too). To disable only this mod, delete or rename its enabled.txt.
+
+[size=4][b]Troubleshooting / bug reports[/b][/size]
+Open Win64\ue4ss\UE4SS.log and search for [TS2TPS]. The line "[TS2TPS] loaded v0.9.0" means the mod started. Please attach the [TS2TPS] lines when reporting a problem.
+
+[size=4][b]Credits[/b][/size]
+[list]
+[*]UE4SS (MIT): [url=https://github.com/UE4SS-RE/RE-UE4SS]https://github.com/UE4SS-RE/RE-UE4SS[/url]
+[*]Open source (MIT). Source and issues: [url=https://github.com/kontetu/TS2TPSCamera]https://github.com/kontetu/TS2TPSCamera[/url]
+[*]Unofficial fan-made mod, not affiliated with the developer or publisher of Tormented Souls 2.
+[*]Developed with the help of AI (Claude).
+[/list]
