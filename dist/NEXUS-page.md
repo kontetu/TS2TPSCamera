@@ -47,7 +47,9 @@ the game is back to normal.
 
 ## Controls
 
-| Action | Gamepad | Keyboard / mouse |
+Gamepad controls are written for an **Xbox-style controller (XInput)**; the button names are Xbox names.
+
+| Action | Gamepad (Xbox controller) | Keyboard / mouse |
 | --- | --- | --- |
 | Look | Right stick | Mouse |
 | Move | Left stick | WASD |

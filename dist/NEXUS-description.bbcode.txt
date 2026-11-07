@@ -37,13 +37,14 @@ Tested with a clean install of exactly that zip. The older v3.0.0 / v3.0.1 tag r
 [/list]
 
 [size=4][b]Controls[/b][/size]
+Gamepad controls are written for an [b]Xbox-style controller (XInput)[/b]; the button names below are Xbox names.
 [list]
-[*]Look: right stick / mouse
-[*]Move: left stick / WASD (camera relative)
-[*]Weapon select: D-pad / number keys 1-4
-[*]Camera behind the character: right stick click
-[*]Flashlight: left stick click (gamepad) / F (keyboard)
-[*]Settings: F1 (keyboard)
+[*]Look: Xbox controller right stick (RS) / mouse
+[*]Move: Xbox controller left stick (LS) / WASD (camera relative)
+[*]Weapon select: Xbox controller D-pad / number keys 1-4
+[*]Camera behind the character: Xbox controller right stick click (RS)
+[*]Flashlight: Xbox controller left stick click (LS) / F (keyboard)
+[*]Settings screen: F1 (keyboard). Inside it: D-pad up/down = item, left/right = value, RB/LB = x10, X = reset the item, A = confirm, B = close. Keyboard: arrows, PgUp/PgDn = x10, R = reset the item, Enter = confirm, ESC or F1 = close.
 [/list]
 
 [size=4][b]Uninstall[/b][/size]
