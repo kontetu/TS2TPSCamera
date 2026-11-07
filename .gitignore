@@ -1,0 +1,13 @@
+# Never publish: game assets extracted for research, local backups, install records, build output,
+# the player's own saved settings, tool downloads and Python caches.
+/research/*
+!/research/PHASE0-NOTES-ja.md
+/backups/
+/release/
+/tools/
+/TS2Probe/
+settings_values.lua
+snapshot-*
+*.log
+__pycache__/
+*.pyc

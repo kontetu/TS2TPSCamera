@@ -1,0 +1,103 @@
+# Tormented Souls 2 TPS カメラ MOD (TS2TPSCamera) v0.9.0
+
+固定カメラのゲーム **Tormented Souls 2** を、主人公の背後から見る TPS 視点にします。
+マウス / 右スティックで 360 度見渡せます。
+
+UE4SS の Lua MOD です。ゲームのファイルやセーブは**書き換えません**（ゲームの実行ファイルの隣にファイルを足すだけ）。
+削除すれば（「元に戻す」参照）完全に元の状態です。
+
+*非公式のファンメイド MOD です。Tormented Souls 2 の開発元・販売元とは関係がなく、承認も受けていません。*
+
+## できること
+
+- 主人公の背後から前方を見る視点。マウス / 右スティックで 360 度見渡せる。
+- 武器を構えると、ゲームが選んだ敵（自動ロックオン）へカメラが素早く向く。標的を切り替えたときも同様。向いた後は視点を自由に動かせる。構えや射撃そのものは元のまま。
+- ムービー・イベント・パズル・QTE などは元のカメラのまま。終わった瞬間に TPS へ戻る。
+- 目のマークの調査、はしごの上り下り、台車の押し引き、敵に捕まっている間も TPS 視点のまま。
+- アイテム画面・メニューは元どおり（アイテムの右スティック回転など）。
+- **F1** で設定画面。カメラ位置、視点の感度・反転・デッドゾーン、自動で背後へ回す機能。設定は保存される。
+- 設定画面の言語はゲームの言語に合わせて日本語 / 英語（それ以外の言語は英語）。
+
+## 必要なもの
+
+- Tormented Souls 2（Steam、Windows）。`TormentedSouls2-Win64-Shipping.exe` の SHA-256 が
+  `6C71AB55143ADD71E56C9477CDBFCB8F44E16D8D5C4DF7C8C678396A6275CB4F` のビルドで開発しました。ゲームのアップデートで動かなくなる可能性があります。
+- **UE4SS**: 公式の **experimental-latest** ビルド `UE4SS_v3.0.1-1217-g4fb9b615.zip`（`zDEV-` が付いていない方）。
+  入手先: <https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest>
+  Lua の遅延実行 API（`LoopInGameThreadWithDelay`）が必要で、`dwmapi.dll` だけが実行ファイルの隣、残りが `ue4ss` フォルダ内という配置です。
+  この公式 zip だけを使ったクリーンな導入で動作を確認しました（ファイルの SHA-256:
+  `dwmapi.dll` `6460773222A8C19BFBF6FA23342F41DFD0CCA5A6E5A89F06218F1EF1AE6A9BDF`、
+  `ue4ss\UE4SS.dll` `AAB30033E336DF1FEAE7EE5F175A7DBDBDC0630C9C3D70F3086D212F25009F8B`）。
+  v3.0.0 / v3.0.1 のタグ版（2024年初め）やそれ以外のビルドは未確認です。
+
+## 導入
+
+1. ゲームを終了する。
+2. UE4SS を入れる。UE4SS のパッケージの `dwmapi.dll` と `ue4ss` フォルダを  
+   `...\steamapps\common\Tormented Souls 2\TormentedSouls2\Binaries\Win64\`  
+   （`TormentedSouls2-Win64-Shipping.exe` があるフォルダ）へコピーする。すでに入っていれば不要。
+3. この zip を展開し、中の **`ue4ss`** フォルダを同じ `Win64` フォルダへコピーする（マージ / 上書き）。結果は  
+   `Win64\ue4ss\Mods\TS2TPSCamera\Scripts\main.lua` と `Win64\ue4ss\Mods\TS2TPSCamera\enabled.txt` になる。
+4. ゲームを起動してセーブをロードする。カメラが背後になる。通常のプレイ中に **F1** で設定画面が開く。
+
+起動しない、カメラが変わらないときは「困ったとき」を見てください。
+
+## 操作
+
+| 操作 | パッド | キーボード / マウス |
+| --- | --- | --- |
+| 視点 | 右スティック | マウス |
+| 移動（カメラ基準） | 左スティック | W / A / S / D |
+| 武器切り替え | 十字キー | 数字キー 1〜4（元のゲーム通り） |
+| カメラを背後へ戻す | 右スティック押し込み | — |
+| 懐中電灯 ON/OFF | 左スティック押し込み | F（元のゲーム通り） |
+| 設定画面 | — | F1 |
+
+- TPS 中は十字キーでキャラは動きません（武器切り替え専用）。
+- 右スティックがカメラ用になるため、元の「右スティックで武器ショートカット」は十字キーに移しています。
+- 固定カメラに戻っている間（TPS を OFF にした場合や、ムービー・パズルなどの間）は、元のゲームの操作です。
+
+## F1 設定画面
+
+- **カメラ**: TPSカメラの ON/OFF、カメラ位置変更画面を開く、移動中にカメラを自動で背後へ回す（ON/OFF と速さ）。
+- **視点操作（パッド）**: 右スティック感度（左右・上下）、デッドゾーン、右スティックの左右反転・上下反転。
+- **操作視点（マウス）**: マウスの感度（左右・上下）、マウスの左右反転・上下反転。
+- **カメラ位置変更画面**: 距離・高さ・左右・視野角を、キャラクターを見ながらその場で調整。X / R 長押しでリセット。
+- パッド: 方向キー上下で項目、左右で値、RB/LB で 10 倍ずつ、X でその項目を初期化、A で決定、B で閉じる。  
+  キーボード: 矢印キーで項目・値、PgUp/PgDn で 10 倍ずつ、R でその項目を初期化、Enter で決定、ESC か F1 で閉じる。
+- 画面を開いている間はゲームが止まります。設定は `ue4ss\Mods\TS2TPSCamera\settings_values.lua` に保存されます。
+
+## 元に戻す
+
+- この MOD だけ止める: `Win64\ue4ss\Mods\TS2TPSCamera\enabled.txt` を削除または改名。
+- ゲームを閉じずに固定カメラへ: F1 で「TPSカメラ」を OFF。
+- 完全に削除: `Win64\ue4ss\Mods\TS2TPSCamera` を削除。UE4SS も外すなら `Win64\dwmapi.dll` と `Win64\ue4ss` フォルダを削除。
+
+## 既知の制限
+
+- レベルは固定カメラ前提で作られているため、背面の描画欠け・低い天井・狭い通路で見た目が崩れる場所があります。カメラの壁めり込み防止は既定で ON です。
+- 全シナリオ（全ボス・全 QTE など）の通しプレイでの確認はしていません。
+- 設定画面の英語表示は、日本語表示ほど確認していません。
+- ゲームのアップデートで動かなくなることがあります。
+
+## 困ったとき
+
+- `Win64\ue4ss\UE4SS.log` で `[TS2TPS]` を検索。`[TS2TPS] loaded v0.9.0 ...` の行があれば MOD は起動しています。
+- `[TS2TPS]` の行が一つも無い: UE4SS が MOD を読んでいません。`dwmapi.dll` と `ue4ss\UE4SS.dll` の位置、`TS2TPSCamera\enabled.txt` の有無を確認。
+- 関数が無い / `LoopInGameThreadWithDelay` に関するエラー: UE4SS のビルドが古すぎます。
+- 不具合の報告には、ログの `[TS2TPS]` の行を添えてください。
+
+## クレジット・ライセンス
+
+- [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS)（MIT ライセンス）を使います。UE4SS はこのパッケージに含まれません。
+- この MOD は MIT ライセンスです（`LICENSE.txt`）。
+
+---
+
+## 開発者向け
+
+- ソース: `TS2TPSCamera/`（UE4SS 用の Lua MOD）。計算部分（カメラ計算・設定モデル）は単体テストがあります: `python tests/run_tests.py`（Python の `lupa` が必要）。
+- 配布 zip: `.\Build-Release.ps1`（PowerShell）で、MOD 本体と `dist/` の文書から `release\TS2TPSCamera-v<版>.zip` を作ります。版を上げるときは `TS2TPSCamera/Scripts/main.lua` の `VERSION`、README 2 つ、`dist/CHANGELOG.md` を揃えてください。
+- `Install-TS2TPS.ps1` は作者の開発用インストーラ（作者の PC からコピーする作り）です。利用者は上の導入手順に従ってください。
+- 調査・設計メモ（日本語）: `HANDOFF.md`、`research/PHASE0-NOTES-ja.md`。
+- Issue / Pull Request 歓迎です。不具合報告には `UE4SS.log` の `[TS2TPS]` の行を添えてください。
