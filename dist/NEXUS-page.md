@@ -67,5 +67,5 @@ Delete `Win64\ue4ss\Mods\TS2TPSCamera` (and `dwmapi.dll` + `ue4ss` if you want U
 
 ## Permissions / Author notes (suggested)
 
-- Open source (MIT). Source and issue tracker: <GitHub URL here - fill in once the repository exists>.
+- Open source (MIT). Source and issue tracker: <https://github.com/kontetu/TS2TPSCamera>.
 - Please attach the `[TS2TPS]` lines from `Win64\ue4ss\UE4SS.log` when reporting a problem.
