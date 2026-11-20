@@ -181,6 +181,18 @@ local SPECIAL_FLAGS = { "isSolvingPuzzle", "isInteractingWithPuzzleComp", "isInt
 -- (OnCinematic reads back as an object on this build, so it never counts as true.)
 -- A puzzle keeps CurrentPuzzle / bIsInsideInteraction set for its whole duration, while
 -- isSolvingPuzzle and isInputDisabled flicker between steps (seen in the log).
+-- The dimension mirror (BP_DimensionMirror, built as a puzzle) leaves isInteractingWithPuzzleComp set after the
+-- crossing, with no CurrentPuzzle and the controls back: the player walks freely, so the flag is stale. The
+-- puzzle-component flags therefore count only while a puzzle is really running; if the game does take the
+-- camera for a puzzle, the view-target check hands the camera back anyway.
+local PUZZLE_COMP_FLAGS = { isInteractingWithPuzzleComp = true, isInteractingWithChildPuzzleComp = true }
+
+local function puzzle_running(pawn)
+    return valid(try(function() return pawn.CurrentPuzzle end))
+        or try(function() return pawn.bIsInsideInteraction end) == true
+        or try(function() return pawn.isSolvingPuzzle end) == true
+end
+
 local function special_state(pawn)
     -- the struggle QTE while an enemy holds the player keeps the TPS view (keep_when_grabbed)
     local grabbed_recently = false
@@ -188,8 +200,18 @@ local function special_state(pawn)
         if is_grabbed(pawn) then S.last_grab_clock = os.clock() end
         grabbed_recently = os.clock() - (S.last_grab_clock or -100) < 1.5
     end
+    local stale = nil
     for _, flag in ipairs(SPECIAL_FLAGS) do
-        if try(function() return pawn[flag] end) == true and not (flag == "QTEnabled" and grabbed_recently) then return flag end
+        if try(function() return pawn[flag] end) == true and not (flag == "QTEnabled" and grabbed_recently) then
+            if not PUZZLE_COMP_FLAGS[flag] or puzzle_running(pawn) then return flag end
+            stale = stale or flag
+        end
+    end
+    if stale ~= S.stale_flag then
+        S.stale_flag = stale
+        if stale then
+            log("ignoring " .. stale .. ": no puzzle is running (CurrentPuzzle=nil, bIsInsideInteraction=false, isSolvingPuzzle=false)")
+        end
     end
     if valid(try(function() return pawn.CurrentPuzzle end)) then return "CurrentPuzzle" end
     if try(function() return pawn.bIsInsideInteraction end) == true then return "bIsInsideInteraction" end
