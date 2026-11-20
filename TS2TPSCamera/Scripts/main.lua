@@ -305,6 +305,62 @@ local function apply_camera_settings(pawn)
     return true
 end
 
+-- Darkness effect (screen flicker / lines while standing in the dark without a light).
+-- BPC_DarknessSystem.LoadMaterialToCameras puts the character's DarknessSystem_Mat (a post-process material)
+-- into the PostProcessSettings of every BP_RailCamera's camera, then animates its "Alpha" / "Lines"
+-- parameters. Our TPS view looks through the pawn's FollowCamera, which never gets that material, so the
+-- effect was missing. Add the same material instance to FollowCamera (weight 1); while it is idle the game
+-- keeps Alpha at 0, so it only shows when the game turns it on.
+local function blendable_index(cam, mat)
+    local found, count = nil, 0
+    pcall(function()
+        local arr = cam.PostProcessSettings.WeightedBlendables.Array
+        count = arr:GetArrayNum()
+        arr:ForEach(function(index, element)
+            local item = element:get()
+            if same_object(try(function() return item.Object end), mat) then found = index end
+        end)
+    end)
+    return found, count
+end
+
+local function ensure_darkness_effect(pawn)
+    local now = os.clock()
+    if now < (S.dark_next or 0) then return end
+    S.dark_next = now + 1.0
+    local mat = try(function() return pawn.DarknessSystem_Mat end)
+    local cam = try(function() return pawn.FollowCamera end)
+    if not valid(mat) or not valid(cam) then return end
+    if blendable_index(cam, mat) then return end
+    if S.dark_failed and same_object(S.dark_failed, mat) then return end
+
+    local _, before = blendable_index(cam, mat)
+    local tried = {}
+    local attempts = {
+        { "AddOrUpdateBlendable", function() cam:AddOrUpdateBlendable(mat, 1.0) end },
+        { "array append", function()
+            local arr = cam.PostProcessSettings.WeightedBlendables.Array
+            arr[arr:GetArrayNum() + 1] = { Weight = 1.0, Object = mat }
+        end },
+        { "struct assign", function()
+            cam.PostProcessSettings.WeightedBlendables = { Array = { { Weight = 1.0, Object = mat } } }
+        end },
+    }
+    for _, attempt in ipairs(attempts) do
+        local ok, err = pcall(attempt[2])
+        local index, count = blendable_index(cam, mat)
+        tried[#tried + 1] = attempt[1] .. "=" .. (index and "ok" or (ok and "no effect" or ("error " .. tostring(err))))
+        if index then
+            log(string.format("darkness effect added to the TPS camera (%s; blendables %d -> %d, PostProcessBlendWeight=%s)",
+                attempt[1], before, count, tostring(try(function() return cam.PostProcessBlendWeight end))))
+            S.dark_failed = nil
+            return
+        end
+    end
+    S.dark_failed = mat
+    log("darkness effect could NOT be added to the TPS camera: " .. table.concat(tried, ", "))
+end
+
 local function restore_originals(pawn)
     local saved = S.saved
     if not saved or not valid(pawn) then return end
@@ -806,6 +862,7 @@ local function update(pawn, dt)
         -- input disabled (inventory, menus, item pick-up ...) while the pawn's camera is the view:
         -- keep the TPS view, just hold it still (no look input) until input comes back
     end
+    ensure_darkness_effect(pawn)
     local pushing = is_pushing(pawn)
     if hold ~= S.hold_state then
         S.hold_state = hold
