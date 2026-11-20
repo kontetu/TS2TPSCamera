@@ -2,7 +2,7 @@
 
 Suggested mod name: **Third-Person Camera**  (game: Tormented Souls 2)
 Suggested category: Gameplay / Camera
-Version: 0.9.0
+Version: 0.9.1
 
 ## Short summary (one or two sentences)
 

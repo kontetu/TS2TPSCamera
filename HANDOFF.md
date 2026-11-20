@@ -72,7 +72,12 @@ Tormented Souls 2 を TPS 視点にする UE4SS Lua MOD。最終更新 2026-11-0
 - `Install-TS2TPS.ps1` は PowerShell から実行（bash 経由だと `-Mods A,B` が 1 つの文字列になる）。実行ポリシーで止まる場合は `-ExecutionPolicy Bypass`。
 - ログ: `...\Binaries\Win64\ue4ss\UE4SS.log` の `[TS2TPS]` 行。
 
-## 配布（0.9.0 の準備済み、未公開）
+## 配布
+
+- 0.9.0: 2026-11-07 公開（GitHub、Nexus mod 12）。
+- 0.9.1（2026-11-20）: 次元の鏡で固定カメラに戻る／F1 が開かない不具合（残ったパズルフラグ `isInteractingWithPuzzleComp` を、`CurrentPuzzle`・`bIsInsideInteraction`・`isSolvingPuzzle` のどれかが立っているときだけ有効にした）と、暗闇の演出（`BPC_DarknessSystem.LoadMaterialToCameras` が `BP_RailCamera` のカメラにだけ付ける `DarknessSystem_Mat` を `FollowCamera` にも `AddOrUpdateBlendable` で付けた）を修正。ゲームの 2026年11月アップデート版（exe `FB761DAB...`）で確認。
+
+### 0.9.0 の記録
 
 - zip は作成・内容検証済み。**クリーン導入テスト済み（2026-11-07）**: 公式 experimental-latest の `UE4SS_v3.0.1-1217-g4fb9b615.zip` だけを入れ、配布 zip を README どおりに導入 → 起動、MOD 読込（`loaded v0.9.0`）、TPS ON、F1 設定画面、TPS の OFF/ON 切替、設定の保存まで動作。UE4SS のエラー行 `Failed to expose size of FObjectPtrProperty` は UE4SS 側のメッセージで MOD は影響なし。
 - 未確認: 公式のタグ版 v3.0.0 / v3.0.1（2024年初め。`LoopInGameThreadWithDelay` が無い可能性）。再起動後の設定保持。ロード後の視点（この導入では未操作）。

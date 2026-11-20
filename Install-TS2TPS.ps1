@@ -22,7 +22,7 @@ $expected = @{
     'dwmapi.dll'        = 'F8BEC398FCBB2E3E8D1EF2875CAFCC15D09F82073402FC9879A9CBF78B8D9514'
     'ue4ss\UE4SS.dll'   = 'C273E7228687B647226FD63D7CA65888D313ECE6BE18996EC1320D00A5EFE1F8'
 }
-$gameExeHashKnown = '6C71AB55143ADD71E56C9477CDBFCB8F44E16D8D5C4DF7C8C678396A6275CB4F'
+$gameExeHashKnown = 'FB761DABD9E61A446CB2DDEAF44BA0432A8EE1A5A1F0A818EB204F3F6F2EE488'
 
 if (-not (Test-Path -LiteralPath $exe)) { throw "Game executable not found: $exe" }
 if (Get-Process -Name 'TormentedSouls2-Win64-Shipping' -ErrorAction SilentlyContinue) { throw 'Close Tormented Souls 2 first.' }

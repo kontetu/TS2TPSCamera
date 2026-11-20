@@ -1,4 +1,4 @@
-# Tormented Souls 2 - Third-Person Camera (TS2TPSCamera) v0.9.0
+# Tormented Souls 2 - Third-Person Camera (TS2TPSCamera) v0.9.1
 
 Turns the fixed-camera game **Tormented Souls 2** into a third-person game: the camera follows the
 character from behind and you can look all the way around with the mouse or the right stick.
@@ -23,9 +23,9 @@ game executable. Delete them (see "Uninstall") and the game is exactly as it was
 
 ## Requirements
 
-- Tormented Souls 2 (Steam, Windows). Developed against the build whose
+- Tormented Souls 2 (Steam, Windows). Last tested with the build whose
   `TormentedSouls2-Win64-Shipping.exe` has the SHA-256
-  `6C71AB55143ADD71E56C9477CDBFCB8F44E16D8D5C4DF7C8C678396A6275CB4F`. A game update may break the mod.
+  `FB761DABD9E61A446CB2DDEAF44BA0432A8EE1A5A1F0A818EB204F3F6F2EE488` (game update of November 2026). A game update may break the mod.
 - **Gamepad: an Xbox-style controller (XInput) is assumed.** Button names in these docs (A / B / X, LB / RB, right/left stick click) are Xbox names. Other controllers are untested; they may work if the game sees them as an Xbox controller (for example through Steam Input).
 - **UE4SS** - the official **experimental-latest** build: `UE4SS_v3.0.1-1217-g4fb9b615.zip` (not the `zDEV-` one)
   from <https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest>.
@@ -97,7 +97,7 @@ If the game does not start or the camera does not change, see "Troubleshooting".
 ## Troubleshooting
 
 - Look at `Win64\ue4ss\UE4SS.log` and search for `[TS2TPS]`. The line
-  `[TS2TPS] loaded v0.9.0 ...` means the mod started.
+  `[TS2TPS] loaded v0.9.1 ...` means the mod started.
 - No `[TS2TPS]` lines: UE4SS is not loading the mod. Check that `dwmapi.dll` and `ue4ss\UE4SS.dll` are where
   step 2 says, and that `TS2TPSCamera\enabled.txt` exists.
 - `[TS2TPS]` lines about a missing function / `LoopInGameThreadWithDelay`: your UE4SS build is too old.

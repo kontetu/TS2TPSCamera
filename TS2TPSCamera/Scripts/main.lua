@@ -13,7 +13,7 @@
 -- F1 opens the settings screen (ui.lua); every setting lives in config.lua.
 -- The right stick belongs to the camera: its weapon shortcut (AxisHorizontal/AxisVertical on the
 -- pawn) is blocked, and the D-pad picks the shortcut instead (it no longer does tank movement).
-local VERSION = "0.9.0" -- keep in step with dist/CHANGELOG.md and Build-Release.ps1
+local VERSION = "0.9.1" -- keep in step with dist/CHANGELOG.md and Build-Release.ps1
 local PREFIX = "[TS2TPS] "
 local function log(message) print(PREFIX .. tostring(message) .. "\n") end
 

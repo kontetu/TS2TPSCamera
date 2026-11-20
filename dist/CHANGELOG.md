@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.1 - 2026-11-20
+
+- Fixed: near the dimension mirror and after crossing it (in both worlds) the camera kept falling back to the
+  fixed camera and the F1 settings screen would not open. The game leaves a puzzle flag set there although no
+  puzzle is running; it is now ignored unless a puzzle is really in progress.
+- Fixed: the darkness effect (the screen flickers while you stand in the dark without a light) now shows in the
+  TPS view too.
+- Tested with the game update of November 2026.
+
 ## 0.9.0 - 2026-11-07 (first public beta)
 
 - Third-person camera behind the character; 360-degree look with mouse / right stick.
