@@ -107,6 +107,7 @@ local S = {
     swaps = 0,
     mouse_x = nil, mouse_y = nil, key_x = nil, key_y = nil,
 }
+local screen = nil -- the F1 settings screen (ui.lua), created at the end of this file
 
 local function save_settings() store.save(settings_path, settings) end
 
@@ -454,6 +455,7 @@ local function disengage(pc, pawn, restore_view, reason)
         end
     end
     S.inject, S.number_until = nil, nil
+    S.wheel_check, S.wheel_pending, S.sprinting = nil, 0, nil
     local restored = false
     if restore_view and valid(pc) then
         -- give back whatever camera the game asked for last (a puzzle camera, a room camera ...)
@@ -554,20 +556,179 @@ local function set_stick(pawn, x, y)
     end
 end
 
+-- Keyboard walk / run. The pawn picks walking or running from how far the stick is pushed, so W/A/S/D at full
+-- strength always ran. Now the keys walk (a partial stick value) and run (full value) exactly when the game's own
+-- run state is on: Shift is handled by the game as in the fixed camera (IA_Run -> RunTankModePressed /
+-- RunTankModeReleased set IsRunningTankMode), and the TPS keys only follow that state.
+-- The walk strength sits between the pawn's WalkPercent and RunPercent and corrects itself from the pawn's
+-- movement Status (0 idle, 1 walking, 2 running) if the game still runs or does not move.
+local function shift_down(pc)
+    return key_state(pc, fname("LeftShift")) > 0.5 or key_state(pc, fname("RightShift")) > 0.5
+end
+
+-- the game's run state (what Shift does in the fixed camera); Shift held if the flag cannot be read
+local function game_wants_run(pc, pawn)
+    local flag = try(function() return pawn.IsRunningTankMode end)
+    if type(flag) == "boolean" then return flag, "IsRunningTankMode" end
+    return shift_down(pc), "Shift held"
+end
+
+local function walk_strength(pawn)
+    if S.walk_mag then return S.walk_mag end
+    local wp = num(try(function() return pawn.WalkPercent end))
+    local rp = num(try(function() return pawn.RunPercent end))
+    local mag = 0.45
+    if wp and rp and wp >= 0 and rp > wp and rp <= 1 then mag = (wp + rp) / 2 end
+    S.walk_mag = mag
+    log(string.format("keyboard walk strength %.2f (pawn WalkPercent=%s RunPercent=%s WalkVelocity=%s RunVelocity=%s MaxRunVelocity=%s)",
+        mag, tostring(wp), tostring(rp), tostring(try(function() return pawn.WalkVelocity end)),
+        tostring(try(function() return pawn.RunVelocity end)), tostring(try(function() return pawn.MaxRunVelocity end))))
+    return mag
+end
+
+-- the game still runs while we walk (Status 2), or nothing moves (Status 0): nudge the walk strength
+local function tune_walk(pawn, now)
+    local status = num(try(function() return pawn.Status end))
+    if status == 2 or status == 0 then
+        S.walk_bad_since = S.walk_bad_since or now
+        if now - S.walk_bad_since > 0.4 then
+            local before = S.walk_mag
+            if status == 2 then S.walk_mag = math.max(0.15, S.walk_mag - 0.1) else S.walk_mag = math.min(0.95, S.walk_mag + 0.1) end
+            S.walk_bad_since = nil
+            if S.walk_mag ~= before then
+                log(string.format("keyboard walk strength %.2f -> %.2f (pawn Status=%s while walking)", before, S.walk_mag, tostring(status)))
+            end
+        end
+    else
+        S.walk_bad_since = nil
+    end
+end
+
 local function update_wasd(pc, pawn)
     if not settings.wasd_move then return end
     local input_disabled = try(function() return pawn.isInputDisabled end) == true
     local x = (key_state(pc, fname("D")) > 0.5 and 1 or 0) - (key_state(pc, fname("A")) > 0.5 and 1 or 0)
     local y = (key_state(pc, fname("W")) > 0.5 and 1 or 0) - (key_state(pc, fname("S")) > 0.5 and 1 or 0)
     if input_disabled then x, y = 0, 0 end
+    local run, source = game_wants_run(pc, pawn)
+    if run ~= S.game_run and (S.run_flag_logs or 0) < 30 then
+        S.run_flag_logs = (S.run_flag_logs or 0) + 1
+        log(string.format("game run state %s (%s, Shift=%s, moving=%s)", tostring(run), source, tostring(shift_down(pc)), tostring(x ~= 0 or y ~= 0)))
+    end
+    -- after running, the pawn reports Status 2 for a moment while it slows down: do not tune the walk then
+    if S.game_run and not run then S.walk_settle_until = os.clock() + 1.0 end
+    S.game_run = run
     if x ~= 0 or y ~= 0 then
         if pad_stick_active(pc) then return end -- the gamepad stick wins
         local length = math.sqrt(x * x + y * y)
-        set_stick(pawn, x / length, y / length)
-        if not S.wasd_on then S.wasd_on = true; log("WASD movement (left-stick style) active") end
+        local strength = run and 1.0 or walk_strength(pawn)
+        if not run and S.wasd_on and os.clock() > (S.walk_settle_until or 0) then tune_walk(pawn, os.clock()) end
+        set_stick(pawn, x / length * strength, y / length * strength)
+        if not S.wasd_on then S.wasd_on = true; log("WASD movement (left-stick style) active: walk, run follows the game's run state (Shift)") end
+        if run ~= S.sprinting then
+            S.sprinting = run
+            if (S.sprint_logs or 0) < 20 then
+                S.sprint_logs = (S.sprint_logs or 0) + 1
+                log(string.format("keyboard %s (strength %.2f, Status=%s)", run and "run" or "walk", strength, tostring(try(function() return pawn.Status end))))
+            end
+        end
     elseif S.wasd_on then
-        S.wasd_on = false
+        S.wasd_on, S.sprinting = false, nil
         if not pad_stick_active(pc) then set_stick(pawn, 0, 0) end
+    end
+end
+
+-- Mouse wheel: next / previous weapon of the shortcut slots, in the order of the number keys 1-4.
+-- pawn.Inventory.Shortcuts holds item ids ("" = empty). Its first entry is the centre slot; then come up,
+-- right, down, left (seen in game: key 2 sends right / AxisHorizontal +1, key 3 sends down / AxisVertical +1,
+-- the right direction equips Shortcuts[2] and the left one Shortcuts[4]). A slot is selected the same way as
+-- with the D-pad. Scrolling down goes 1 -> 2 -> 3 -> 4 -> 1, up goes back; empty slots are skipped.
+local WHEEL_SLOTS = {
+    { name = "1 (up)",    dpad = 1 },
+    { name = "2 (right)", dpad = 3 },
+    { name = "3 (down)",  dpad = 2 },
+    { name = "4 (left)",  dpad = 4 },
+}
+
+-- the weapon ids of the four direction slots (1 up, 2 right, 3 down, 4 left), "" = empty
+local function read_slots(pawn)
+    local raw = {}
+    pcall(function()
+        pawn.Inventory.Shortcuts:ForEach(function(index, element)
+            local value = element:get()
+            raw[index] = (type(value) == "string" and value) or try(function() return value:ToString() end) or ""
+        end)
+    end)
+    local offset = (#raw >= 5) and 1 or 0 -- skip the centre slot
+    local slots = {}
+    for slot = 1, 4 do slots[slot] = raw[slot + offset] or "" end
+    if not S.slots_logged and #raw > 0 then
+        S.slots_logged = true
+        log("weapon shortcut slots (centre first): " .. table.concat(raw, ",") .. " -> wheel order up,right,down,left = " .. table.concat(slots, ","))
+    end
+    return slots
+end
+
+local function current_weapon_id(pawn)
+    local id = try(function() return pawn.BPC_WeaponSystemComponent.CurrentWeapon.weaponID end)
+    if id == nil then return nil end
+    if type(id) == "string" then return id end
+    return try(function() return id:ToString() end)
+end
+
+local function wheel_step(pc)
+    local function pressed(key)
+        return try(function() return pc:WasInputKeyJustPressed({ KeyName = fname(key) }) end) == true
+    end
+    if pressed("MouseScrollDown") then return 1 end
+    if pressed("MouseScrollUp") then return -1 end
+    return 0
+end
+
+local function update_wheel(pc, pawn, input_disabled)
+    local step = wheel_step(pc)
+    if step ~= 0 and not input_disabled then
+        S.wheel_pending = math.max(-3, math.min(3, (S.wheel_pending or 0) + step))
+    end
+    local now = os.clock()
+    -- after a switch, check that the game equipped what was asked for (logged; equipping takes a moment)
+    if S.wheel_check and now >= S.wheel_check.at then
+        local check = S.wheel_check
+        S.wheel_check = nil
+        local now_id = current_weapon_id(pawn) or ""
+        if now_id ~= check.id and (S.wheel_miss_logs or 0) < 10 then
+            S.wheel_miss_logs = (S.wheel_miss_logs or 0) + 1
+            log(string.format("wheel: asked for slot %s (%s), weapon now %s (before %s)", WHEEL_SLOTS[check.slot].name, check.id, now_id, tostring(check.before)))
+        end
+    end
+    if (S.wheel_pending or 0) == 0 or S.inject or S.wheel_check or input_disabled then return end
+    local direction = S.wheel_pending > 0 and 1 or -1
+    S.wheel_pending = S.wheel_pending - direction
+    local slots = read_slots(pawn)
+    local now_id = current_weapon_id(pawn)
+    local current = 0
+    for slot = 1, 4 do if slots[slot] ~= "" and slots[slot] == now_id then current = slot end end
+    if current == 0 and direction < 0 then current = 5 end
+    local target = nil
+    for i = 1, 4 do
+        local slot = ((current - 1 + direction * i) % 4) + 1
+        if slots[slot] ~= "" and slots[slot] ~= now_id then target = slot break end
+    end
+    if not target then
+        if (S.wheel_empty_logs or 0) < 5 then
+            S.wheel_empty_logs = (S.wheel_empty_logs or 0) + 1
+            log("wheel: no other weapon in the shortcut slots (" .. table.concat(slots, ",") .. "), current=" .. tostring(now_id))
+        end
+        S.wheel_pending = 0
+        return
+    end
+    local entry = DPAD[WHEEL_SLOTS[target].dpad]
+    S.inject = { axis = entry.axis, value = entry.value, left = 0.25 }
+    S.wheel_check = { at = now + 0.9, slot = target, id = slots[target], before = now_id }
+    if (S.wheel_logs or 0) < 30 then
+        S.wheel_logs = (S.wheel_logs or 0) + 1
+        log(string.format("wheel %s: %s -> slot %s (%s) via %s", direction > 0 and "down" or "up",
+            current >= 1 and current <= 4 and WHEEL_SLOTS[current].name or tostring(now_id), WHEEL_SLOTS[target].name, slots[target], entry.key))
     end
 end
 
@@ -593,6 +754,7 @@ local function update_dpad_shortcuts(pc, pawn, dt)
         end
         S.dpad_prev[index] = down
     end
+    update_wheel(pc, pawn, input_disabled)
     if S.inject then
         send_axis(pawn, S.inject.axis, S.inject.value)
         S.inject.left = S.inject.left - dt
@@ -759,6 +921,7 @@ local function update(pawn, dt)
         S.settle_until = os.clock() + 3.5
         S.saved, S.saved_view, S.arm, S.written_yaw = nil, nil, nil, nil
         S.recenter_until, S.lock_id, S.lock_turn_until, S.hold_state, S.climbing = nil, nil, nil, nil, false
+        S.walk_mag, S.wheel_check, S.wheel_pending = nil, nil, 0
         S.ready_time = 0
         if S.engaged then
             local py = num(try(function() return pawn:K2_GetActorRotation().Yaw end))
@@ -775,10 +938,14 @@ local function update(pawn, dt)
         -- scaled with real time because the game's delta is ~0 now
         if S.engaged then
             local look_dt = S.real_dt or 0.016
-            S.yaw, S.pitch = cam_math.apply_look(S.yaw, S.pitch, read_input(pc), settings, look_dt)
+            local look = read_input(pc)
+            -- the main screen shows the mouse cursor: moving it to click must not turn the camera
+            if screen and screen.cursor_active() then look.mx, look.my = 0, 0 end
+            S.yaw, S.pitch = cam_math.apply_look(S.yaw, S.pitch, look, settings, look_dt)
             set_control_rotation(pc, S.pitch, S.yaw)
             S.cmd = { pc = pc, pitch = S.pitch, yaw = S.yaw }
         end
+        if screen then screen.frame(pc) end
         return
     end
 
@@ -1107,7 +1274,11 @@ for _, name in ipairs({ "AxisHorizontal", "AxisVertical" }) do
         if valid(pc) and number_key_down(pc) then
             S.number_until = os.clock() + 0.4
             S.number_calls = (S.number_calls or 0) + 1
-            if S.number_calls <= 5 then log(string.format("number-key weapon shortcut passed through (%s)", name)) end
+            if S.number_calls <= 12 then
+                local which = "?"
+                for _, key in ipairs(NUMBER_KEYS) do if key_state(pc, fname(key)) > 0.5 then which = key end end
+                log(string.format("number-key weapon shortcut passed through (%s=%s, key %s)", name, tostring(num(try(function() return value:get() end))), which))
+            end
             return
         end
         if number_key_window() then return end
@@ -1239,7 +1410,6 @@ LoopAsync(1000, function()
 end)
 
 ------------------------------------------------------------------ F1 settings screen
-local screen = nil
 
 -- Make the enabled switch take effect right away (the game is frozen while the screen is open).
 local function refresh_enabled(pc, pawn)

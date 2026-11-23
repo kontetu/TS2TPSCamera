@@ -39,6 +39,55 @@ function M.footer_help(japanese)
         "Up/Down: select, Left/Right: change value, PgUp/PgDn: 10x, R: reset item, Enter: confirm, ESC or F1: close"
 end
 
+-- Third help line of the main screen: the mouse.
+function M.mouse_help(japanese)
+    if japanese then
+        return "マウス: カーソルを合わせて選択、値の左側/右側をクリックで減らす/増やす（オン/オフはクリックで切替）、ホイールで値変更、右クリックで閉じる"
+    end
+    return "Mouse: point to select, click left / right of a value: lower / raise (ON/OFF: click), wheel: change, right click: close"
+end
+
+-- Where every row of the main screen sits inside the panel (the renderer and the mouse share this):
+-- layout[i] = { y = top, h = height, header = bool }. Returns the list and the y below the last row.
+function M.row_layout(rows, body_y, head_h, row_h)
+    local layout, y = {}, body_y
+    for index, row in ipairs(rows) do
+        local h = row.header and head_h or row_h
+        layout[index] = { y = y, h = h, header = row.header ~= nil }
+        y = y + h
+    end
+    return layout, y
+end
+
+-- Which half of a drawn value text (x0 .. x1, e.g. "<  0.86  >") the point px is on: "less" left of the
+-- middle, "more" right of it, nil outside (with `pad` px of slack on both ends).
+function M.value_part(px, x0, x1, pad)
+    pad = pad or 0
+    if type(px) ~= "number" or px < x0 - pad or px > x1 + pad then return nil end
+    return (px < (x0 + x1) / 2) and "less" or "more"
+end
+
+-- The selectable row under panel point (px, py), and the part of it: "less" / "more" for the left / right half
+-- of the value, "label" elsewhere. Headers and gaps give nil. spans[index] = { x0, x1 }: where the value text
+-- of that row is drawn (its arrows move with the text length); without it the value column
+-- (value_x .. value_x + value_w) is split in the middle.
+function M.hit_row(rows, layout, px, py, left, right, value_x, value_w, box_h, spans)
+    if type(px) ~= "number" or type(py) ~= "number" or px < left or px > right then return nil end
+    for index, slot in ipairs(layout) do
+        if not slot.header and rows[index] and not rows[index].header and py >= slot.y and py < slot.y + box_h then
+            local span = spans and spans[index]
+            local part
+            if span then
+                part = M.value_part(px, span[1], span[2], 20)
+            elseif px >= value_x and px <= value_x + value_w then
+                part = (px < value_x + value_w / 2) and "less" or "more"
+            end
+            return index, part or "label"
+        end
+    end
+    return nil
+end
+
 -- Rough rendered width of a label at a font size (no font metrics are available from Lua). Deliberately on the
 -- generous side: CJK / full-width characters are one em, everything else 0.6 em (a space 0.35 em).
 function M.text_width(label, size)

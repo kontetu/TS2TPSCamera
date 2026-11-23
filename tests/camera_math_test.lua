@@ -175,8 +175,43 @@ do
     do
         local heads, others = 0, 0
         for _, r in ipairs(rows) do if r.header then heads = heads + 1 else others = others + 1 end end
-        local panel_h = 62 + heads * 30 + others * 32 + 10 + 112
+        local panel_h = 62 + heads * 30 + others * 32 + 10 + 134
         check("all rows fit the panel without scrolling", panel_h <= 800, panel_h)
+    end
+    -- mouse: help line fits, and the hit test finds the rows the renderer draws
+    for _, ja in ipairs({ true, false }) do
+        check("mouse help fits at size 13 (" .. tostring(ja) .. ")", model.text_width(model.mouse_help(ja), 13) <= 920, model.text_width(model.mouse_help(ja), 13))
+    end
+    do
+        local layout, bottom = model.row_layout(rows, 62, 30, 32)
+        local expect_bottom = 62
+        for _, r in ipairs(rows) do expect_bottom = expect_bottom + (r.header and 30 or 32) end
+        check("row layout height", bottom == expect_bottom, bottom)
+        check("row layout first header", layout[1].y == 62 and layout[1].header)
+        check("row layout second row", layout[2].y == 92 and not layout[2].header)
+        local hit, part = model.hit_row(rows, layout, 100, layout[2].y + 5, 30, 950, 680, 180, 28)
+        check("hit label of row 2", hit == 2 and part == "label", tostring(hit) .. "/" .. tostring(part))
+        hit, part = model.hit_row(rows, layout, 700, layout[2].y + 5, 30, 950, 680, 180, 28)
+        check("hit value left = less", hit == 2 and part == "less", tostring(part))
+        hit, part = model.hit_row(rows, layout, 850, layout[2].y + 5, 30, 950, 680, 180, 28)
+        check("hit value right = more", hit == 2 and part == "more", tostring(part))
+        check("header is not hit", model.hit_row(rows, layout, 100, layout[1].y + 5, 30, 950, 680, 180, 28) == nil)
+        check("gap under a row box is not hit", model.hit_row(rows, layout, 100, layout[2].y + 30, 30, 950, 680, 180, 28) == nil)
+        check("outside the panel is not hit", model.hit_row(rows, layout, 10, layout[2].y + 5, 30, 950, 680, 180, 28) == nil)
+        check("nil point is not hit", model.hit_row(rows, layout, nil, nil, 30, 950, 680, 180, 28) == nil)
+        -- a short value ("<  1  >") ends well left of the column middle: its ">" must still mean "more"
+        local spans = { [2] = { 690, 740 } }
+        hit, part = model.hit_row(rows, layout, 735, layout[2].y + 5, 30, 950, 680, 180, 28, spans)
+        check("short value: right arrow = more", hit == 2 and part == "more", tostring(part))
+        hit, part = model.hit_row(rows, layout, 692, layout[2].y + 5, 30, 950, 680, 180, 28, spans)
+        check("short value: left arrow = less", part == "less", tostring(part))
+        hit, part = model.hit_row(rows, layout, 800, layout[2].y + 5, 30, 950, 680, 180, 28, spans)
+        check("short value: far right of the text = label", part == "label", tostring(part))
+        check("value_part middle split", model.value_part(9, 0, 20) == "less" and model.value_part(11, 0, 20) == "more")
+        check("value_part pad", model.value_part(-5, 0, 20, 10) == "less" and model.value_part(-15, 0, 20, 10) == nil)
+        local last = #rows
+        hit = model.hit_row(rows, layout, 100, layout[last].y + 1, 30, 950, 680, 180, 28)
+        check("last row is hit", hit == last, tostring(hit))
     end
     check("fit_size keeps a fitting label", model.fit_size("abc", 13, 100) == 13)
     check("fit_size shrinks a long label", model.fit_size(string.rep("あ", 40), 17, 400) < 17 and model.text_width(string.rep("あ", 40), model.fit_size(string.rep("あ", 40), 17, 400)) <= 400)
@@ -228,6 +263,11 @@ do
     local y3 = 0
     for _ = 1, 60 * 20 do y3 = cam.recenter_step(y3, 0, 90, -12, 0.5, nil, 1 / 60) end
     check("slow turn arrives", near(y3, 90, 0.5), y3)
+    do -- camera position defaults (also what "reset all" on the camera position screen restores)
+        local d = store.defaults()
+        check("camera position defaults 120/52/24/72", d.distance == 120 and d.height == 52 and d.shoulder == 24 and d.fov == 72,
+            tostring(d.distance) .. "/" .. tostring(d.height) .. "/" .. tostring(d.shoulder) .. "/" .. tostring(d.fov))
+    end
     check("auto recenter is configurable", store.defaults().auto_recenter == false and store.defaults().auto_recenter_speed == 1)
 end
 

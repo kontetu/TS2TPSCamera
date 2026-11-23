@@ -1,5 +1,6 @@
 -- The F1 screens: UMG widgets built in Lua (same technique as the SN2Settings mod).
---   main screen   - list of settings (settings_model.lua), keyboard + gamepad
+--   main screen   - list of settings (settings_model.lua), keyboard + gamepad + mouse (cursor shown; the
+--                   widgets ignore the mouse, so clicks reach the game's input and are hit-tested here)
 --   camera screen - "camera position" editor with the centre of the screen left clear
 -- Keys that need hold/repeat are polled here; the rest come in through screen.key(name) from main.lua.
 -- The game is frozen (time dilation ~0, components keep ticking so camera changes show at once) while a
@@ -24,7 +25,9 @@ local MARGIN = 30
 local BODY_Y = 62
 local HEAD_H = 30 -- group heading row
 local ROW_H = 32  -- setting row
-local FOOT_H = 112 -- two help blocks + the note line
+local FOOT_H = 134 -- two help blocks, the mouse line + the note line
+-- value column of a setting row (the mouse clicks its left / right half to lower / raise the value)
+local VALUE_X, VALUE_W = 680, 180
 
 -- Camera screen steps per repeat (the settings' own steps are coarser).
 local STEP = { height = 2, shoulder = 2, distance = 4, fov = 1 }
@@ -90,6 +93,10 @@ function M.new(ctx)
     local held = {}
     local note = nil
     local hold_progress = 0
+    local layout = model.row_layout(rows, BODY_Y, HEAD_H, ROW_H)
+    local value_spans = {} -- row index -> { x0, x1 } of the value text as drawn (for the mouse)
+    local mouse = { left = false, right = false }
+    local CLOSE_BOX = { x = PANEL_W - MARGIN - 40, y = 8, w = 50, h = 40 } -- the x in the top right corner
 
     -- Screen language: always the game's own language (ctx.language() -> "ja", "en", ...), read at every open.
     local game_is_japanese = false
@@ -256,9 +263,11 @@ function M.new(ctx)
         local ja = japanese()
         box(0, 0, PANEL_W, PANEL_H, palette.panel, palette.panel_rim, 1, 14, 0)
         put(text(ja and "TPSカメラ 設定" or "TPS Camera Settings", 24, palette.text, 600), MARGIN, 14, 600, 34, 3)
-        put(text("F1", 16, palette.accent), PANEL_W - MARGIN - 40, 20, 60, 26, 3)
+        put(text("F1", 16, palette.accent), PANEL_W - MARGIN - 100, 20, 40, 26, 3)
+        put(text("×", 26, palette.text), CLOSE_BOX.x + 14, CLOSE_BOX.y + 2, 36, 36, 3)
 
         first = model.window_start(rows, selected, PER_PAGE, first) -- always 1: every row fits
+        value_spans = {}
         local y = BODY_Y
         local inner_w = PANEL_W - 2 * MARGIN
         for index = first, math.min(#rows, first + PER_PAGE - 1) do
@@ -281,6 +290,7 @@ function M.new(ctx)
                     local shown = model.format_value(entry, value, ja)
                     if is_sel then shown = "<  " .. shown .. "  >" end
                     put(text(shown, 18, value ~= entry.default and palette.accent or palette.text, 160), 690, y + 1, 160, 26, 3)
+                    value_spans[index] = { 690, 690 + math.min(160, model.text_width(shown, model.fit_size(shown, 18, 160, 9))) }
                     if value ~= entry.default then
                         put(text((ja and "既定 " or "Default ") .. model.format_default(entry, ja), 12, palette.muted, 80), 860, y + 6, 80, 18, 3)
                     end
@@ -296,7 +306,8 @@ function M.new(ctx)
         put(text(pad_help, 13, palette.muted, inner_w), MARGIN, FOOT_Y + 21, inner_w, 20, 3)
         put(text(ja and "キーボード" or "Keyboard", 13, palette.accent, 300), MARGIN, FOOT_Y + 43, 300, 20, 3)
         put(text(key_help, 13, palette.muted, inner_w), MARGIN, FOOT_Y + 62, inner_w, 20, 3)
-        if note then put(text(note, 14, palette.warn, inner_w), MARGIN, FOOT_Y + 86, inner_w, 20, 3) end
+        put(text(model.mouse_help(ja), 13, palette.muted, inner_w), MARGIN, FOOT_Y + 85, inner_w, 20, 3)
+        if note then put(text(note, 14, palette.warn, inner_w), MARGIN, FOOT_Y + 108, inner_w, 20, 3) end
     end
 
     ------------------------------------------------------------------ camera position screen
@@ -311,9 +322,9 @@ function M.new(ctx)
         put_corner(make_box(GW, GH, palette.side_panel, palette.panel_rim, 1, 10), 0, gx, gy, 0, 0, GW, GH, 0)
         local lines
         if ja then
-            lines = { "十字キー / 矢印キー: カメラ位置を上下左右へ", "右スティック / マウス: 視点操作", "LB / PgDn: カメラを手前へ　　RB / PgUp: カメラを奥へ", "LT / Q: 視野角+　　RT / E: 視野角-", "X / R長押し: すべてリセット　　B / ESC: 設定画面へ戻る" }
+            lines = { "十字キー / 矢印キー: カメラ位置を上下左右へ", "右スティック / マウス: 視点操作", "LB / PgDn / ホイール下: カメラを手前へ　　RB / PgUp / ホイール上: カメラを奥へ", "LT / Q: 視野角+　　RT / E: 視野角-", "X / R長押し: すべてリセット　　B / ESC / 右クリック: 設定画面へ戻る" }
         else
-            lines = { "D-pad / arrow keys: move camera position up, down, left, right", "Right stick / mouse: look around", "LB / PgDn: camera nearer    RB / PgUp: camera farther", "LT / Q: FOV +    RT / E: FOV -", "Hold X / R: reset all    B / ESC: back to settings" }
+            lines = { "D-pad / arrow keys: move camera position up, down, left, right", "Right stick / mouse: look around", "LB / PgDn / wheel down: camera nearer    RB / PgUp / wheel up: camera farther", "LT / Q: FOV +    RT / E: FOV -", "Hold X / R: reset all    B / ESC / right click: back to settings" }
         end
         put_corner(text(ja and "カメラ位置変更" or "Camera position", 18, palette.accent, GW - 32), 0, gx, gy, 16, 10, nil, nil, 3)
         for i, line in ipairs(lines) do put_corner(text(line, 15, palette.text, GW - 32), 0, gx, gy, 16, 12 + i * 26, nil, nil, 3) end
@@ -373,7 +384,7 @@ function M.new(ctx)
             tries = tries + 1
             local still_down = false
             if ctx.valid(pc) then
-                for _, name in ipairs({ "Escape", "F1", "Enter", "Gamepad_FaceButton_Right", "Gamepad_FaceButton_Bottom" }) do
+                for _, name in ipairs({ "Escape", "F1", "Enter", "Gamepad_FaceButton_Right", "Gamepad_FaceButton_Bottom", "LeftMouseButton", "RightMouseButton" }) do
                     if ctx.key_state(pc, FName(name)) > 0.5 then still_down = true end
                 end
             end
@@ -397,12 +408,33 @@ function M.new(ctx)
         if ctx.valid(pc) then release_game_input(pc, state.pawn) end
     end
 
+    ------------------------------------------------------------------ mouse cursor
+    -- Main screen: cursor shown, game + UI input (keys still reach the game's input, which we poll).
+    -- Camera screen and closed: cursor hidden, game-only input (the mouse turns the camera again).
+    local function set_cursor(pc, on)
+        if not ctx.valid(pc) then return end
+        pcall(function() pc.bShowMouseCursor = on end)
+        local lib = StaticFindObject("/Script/UMG.Default__WidgetBlueprintLibrary")
+        if not ctx.valid(lib) then return end
+        local ok, err
+        if on then
+            ok, err = pcall(function() lib:SetInputMode_GameAndUIEx(pc, nil, 0, false, false) end)
+        else
+            ok, err = pcall(function() lib:SetInputMode_GameOnly(pc, false) end)
+        end
+        if not mouse.mode_logged or not ok then
+            mouse.mode_logged = true
+            ctx.log(string.format("settings screen: mouse cursor %s (input mode set=%s%s)", on and "shown" or "hidden", tostring(ok), ok and "" or (" " .. tostring(err))))
+        end
+    end
+
     ------------------------------------------------------------------ actions
     local function close()
         generation = generation + 1
         local old, state = view, input_state
         view, input_state = nil, nil
         mode = "main"
+        if state and ctx.valid(state.pc) then set_cursor(state.pc, false) end
         unfreeze_game()
         if old and ctx.valid(old.root) then pcall(function() old.root:RemoveFromParent() end) end
         if state and ctx.valid(state.pc) then
@@ -448,6 +480,7 @@ function M.new(ctx)
 
     local function open_camera()
         mode = "camera"
+        if input_state then set_cursor(input_state.pc, false) end
         note = nil
         block_held_keys()
         render()
@@ -455,6 +488,7 @@ function M.new(ctx)
 
     local function back_to_main()
         mode = "main"
+        if input_state then set_cursor(input_state.pc, true) end
         block_held_keys()
         render()
     end
@@ -550,6 +584,83 @@ function M.new(ctx)
         return false
     end
 
+    ------------------------------------------------------------------ mouse (called every frame while open)
+    local layout_lib = nil
+    -- mouse position in panel coordinates (the panel is centred), plus the raw viewport position
+    local function mouse_in_panel(pc)
+        layout_lib = (layout_lib and ctx.valid(layout_lib)) and layout_lib or StaticFindObject("/Script/UMG.Default__WidgetLayoutLibrary")
+        if not ctx.valid(layout_lib) then return nil end
+        local pos = layout_lib:GetMousePositionOnViewport(pc)
+        local size = layout_lib:GetViewportSize(pc)
+        local scale = layout_lib:GetViewportScale(pc)
+        local mx, my, sx, sy = pos.X, pos.Y, size.X, size.Y
+        if type(mx) ~= "number" or type(my) ~= "number" or type(sx) ~= "number" or type(sy) ~= "number"
+            or type(scale) ~= "number" or scale <= 0 then return nil end
+        local vw, vh = sx / scale, sy / scale
+        if not mouse.pos_logged then
+            mouse.pos_logged = true
+            ctx.log(string.format("settings screen mouse: position (%.0f, %.0f), viewport %.0fx%.0f px, scale %.3f -> %.0fx%.0f units, panel %dx%d",
+                mx, my, sx, sy, scale, vw, vh, PANEL_W, PANEL_H))
+        end
+        return mx - (vw / 2 - PANEL_W / 2), my - (vh / 2 - PANEL_H / 2), mx, my
+    end
+
+    local function wheel_step(pc)
+        local function just(key)
+            local ok, result = pcall(function() return pc:WasInputKeyJustPressed({ KeyName = FName(key) }) end)
+            return ok and result == true
+        end
+        if just("MouseScrollUp") then return 1 end
+        if just("MouseScrollDown") then return -1 end
+        return 0
+    end
+
+    local function mouse_frame(pc)
+        if not view or not ctx.valid(pc) then return end
+        local left = ctx.key_state(pc, FName("LeftMouseButton")) > 0.5
+        local right = ctx.key_state(pc, FName("RightMouseButton")) > 0.5
+        local left_click, right_click = left and not mouse.left, right and not mouse.right
+        mouse.left, mouse.right = left, right
+        local wheel = wheel_step(pc)
+        if mode == "camera" then
+            if right_click then back_to_main() return end
+            if wheel > 0 then nudge("distance", -1) elseif wheel < 0 then nudge("distance", 1) end
+            return
+        end
+        if right_click then close() return end
+        local ok, px, py, mx, my = pcall(mouse_in_panel, pc)
+        if not ok or not px then
+            if not ok and not mouse.error_logged then mouse.error_logged = true; ctx.log("settings screen mouse error: " .. tostring(px)) end
+            return
+        end
+        local moved = mouse.x == nil or math.abs(mx - mouse.x) + math.abs(my - mouse.y) > 1
+        mouse.x, mouse.y = mx, my
+        if left_click and px >= CLOSE_BOX.x and px <= CLOSE_BOX.x + CLOSE_BOX.w and py >= CLOSE_BOX.y and py <= CLOSE_BOX.y + CLOSE_BOX.h then
+            close()
+            return
+        end
+        local index, part = model.hit_row(rows, layout, px, py, MARGIN, PANEL_W - MARGIN, VALUE_X, VALUE_W, ROW_H - 4, value_spans)
+        if not index then return end
+        -- pointing selects (only when the mouse moved, so a still cursor does not fight the keys)
+        if index ~= selected and (moved or left_click or wheel ~= 0) then
+            selected = index
+            note = nil
+            render()
+        end
+        local row = rows[index]
+        if left_click then
+            if row.action then
+                actions.confirm()
+            elseif row.entry then
+                if row.entry.kind == "bool" then change(1, false)
+                elseif part == "less" then change(-1, false)
+                elseif part == "more" then change(1, false) end
+            end
+        elseif wheel ~= 0 and row.entry then
+            change(wheel, false)
+        end
+    end
+
     local function open()
         local ok_open, why = ctx.can_open()
         if not ok_open then ctx.log("settings screen not opened: " .. tostring(why)); return false end
@@ -571,6 +682,7 @@ function M.new(ctx)
         content_slot:SetAnchors({ Minimum = { X = 0, Y = 0 }, Maximum = { X = 1, Y = 1 } })
         content_slot:SetOffsets({ Left = 0, Top = 0, Right = 0, Bottom = 0 })
         content_slot:SetZOrder(1)
+        pcall(function() root:SetVisibility(3) end) -- HitTestInvisible: clicks go to the game's input, not the widgets
         root:AddToViewport(1600)
         input_state = { pc = pc }
         mode = "main"
@@ -582,6 +694,10 @@ function M.new(ctx)
         end
         if ctx.set_open then ctx.set_open(true) end
         freeze_game(pc, pawn)
+        mouse.left = ctx.key_state(pc, FName("LeftMouseButton")) > 0.5
+        mouse.right = ctx.key_state(pc, FName("RightMouseButton")) > 0.5
+        mouse.x, mouse.y = nil, nil
+        set_cursor(pc, true)
         note = nil
         font_searched = false
         block_held_keys()
@@ -607,6 +723,14 @@ function M.new(ctx)
         close = function() if view then close() end end,
         toggle = function() if view then close() else try_open() end end,
         is_open = function() return view ~= nil end,
+        -- every frame while open (main.lua): mouse clicks / wheel
+        frame = function(pc)
+            if not view then return end
+            local ok, err = pcall(mouse_frame, pc)
+            if not ok and not mouse.frame_error then mouse.frame_error = true; ctx.log("settings screen mouse error: " .. tostring(err)) end
+        end,
+        -- true while the cursor is shown: the mouse must not turn the camera then
+        cursor_active = function() return view ~= nil and mode ~= "camera" end,
         -- keys that arrive as key binds (main.lua): reset confirm close
         key = function(name)
             if not view then return end
