@@ -29,22 +29,145 @@ M.ACTION_LABELS = {
 }
 function M.action_label(name, japanese) local l = M.ACTION_LABELS[name]; return japanese and l.ja or l.en end
 
--- The two help lines at the bottom of the main screen (gamepad, keyboard).
-function M.footer_help(japanese)
-    if japanese then
-        return "方向キー上下で項目、方向キー左右で値変更、RB/LBで10倍ずつ値変更、Xでそれぞれを初期化、Aで決定、Bで閉じる",
-            "矢印キー上下で項目、矢印キー左右で値変更、PgUp/PgDnで10倍ずつ値変更、Rでそれぞれを初期化、Enterで決定、ESCかF1で閉じる"
+-- Control help drawn as "icon: description" (main screen footer and camera position screen).
+-- Icons: { "face", "A" } Xbox face button, { "bumper", "LB" }, { "trigger", "LT" }, { "stick", "RS" },
+-- { "dpad", "ud" | "lr" | "udlr" } (highlighted arms), { "key", "Enter" } keycap,
+-- { "mouse", "move" | "left" | "right" | "wheel" | "wheel_up" | "wheel_down" }, { "hold", "長押し" } (accent text),
+-- { "sep", "/" } (plain text between icons).
+function M.help_rows(screen, japanese)
+    local ja = japanese
+    if screen == "camera" then
+        local hold = ja and "長押し" or "hold"
+        return {
+            { label = ja and "パッド" or "Gamepad", items = {
+                { icons = { { "dpad", "udlr" } }, text = ja and "カメラを上下左右へ" or "Move camera" },
+                { icons = { { "stick", "RS" } }, text = ja and "視点操作" or "Look" },
+                { icons = { { "bumper", "LB" } }, text = ja and "手前へ" or "Nearer" },
+                { icons = { { "bumper", "RB" } }, text = ja and "奥へ" or "Farther" },
+                { icons = { { "trigger", "LT" } }, text = ja and "視野角＋" or "FOV +" },
+                { icons = { { "trigger", "RT" } }, text = ja and "視野角－" or "FOV -" },
+                { icons = { { "face", "X" }, { "hold", hold } }, text = ja and "すべてリセット" or "Reset all" },
+                { icons = { { "face", "B" } }, text = ja and "戻る" or "Back" } } },
+            { label = ja and "キーボード" or "Keyboard", items = {
+                { icons = { { "key", "↑" }, { "key", "↓" }, { "key", "←" }, { "key", "→" } }, text = ja and "カメラを上下左右へ" or "Move camera" },
+                { icons = { { "key", "PgDn" } }, text = ja and "手前へ" or "Nearer" },
+                { icons = { { "key", "PgUp" } }, text = ja and "奥へ" or "Farther" },
+                { icons = { { "key", "Q" } }, text = ja and "視野角＋" or "FOV +" },
+                { icons = { { "key", "E" } }, text = ja and "視野角－" or "FOV -" },
+                { icons = { { "key", "R" }, { "hold", hold } }, text = ja and "すべてリセット" or "Reset all" },
+                { icons = { { "key", "ESC" } }, text = ja and "戻る" or "Back" } } },
+            { label = ja and "マウス" or "Mouse", items = {
+                { icons = { { "mouse", "move" } }, text = ja and "視点操作" or "Look" },
+                { icons = { { "mouse", "wheel_down" } }, text = ja and "手前へ" or "Nearer" },
+                { icons = { { "mouse", "wheel_up" } }, text = ja and "奥へ" or "Farther" },
+                { icons = { { "mouse", "right" } }, text = ja and "戻る" or "Back" } } },
+        }
     end
-    return "D-pad up/down: select, left/right: change value, RB/LB: 10x, X: reset item, A: confirm, B: close",
-        "Up/Down: select, Left/Right: change value, PgUp/PgDn: 10x, R: reset item, Enter: confirm, ESC or F1: close"
+    return {
+        { label = ja and "パッド" or "Gamepad", items = {
+            { icons = { { "dpad", "ud" } }, text = ja and "項目選択" or "Select" },
+            { icons = { { "dpad", "lr" } }, text = ja and "値の変更" or "Adjust" },
+            { icons = { { "bumper", "LB" }, { "bumper", "RB" } }, text = ja and "10倍で変える" or "Change x10" },
+            { icons = { { "face", "X" } }, text = ja and "各項目をリセット" or "Reset each item" },
+            { icons = { { "face", "A" } }, text = ja and "決定" or "Confirm" },
+            { icons = { { "face", "B" } }, text = ja and "閉じる" or "Close" } } },
+        { label = ja and "キーボード" or "Keyboard", items = {
+            { icons = { { "key", "↑" }, { "key", "↓" } }, text = ja and "項目選択" or "Select" },
+            { icons = { { "key", "←" }, { "key", "→" } }, text = ja and "値の変更" or "Adjust" },
+            { icons = { { "key", "PgUp" }, { "key", "PgDn" } }, text = ja and "10倍で変える" or "Change x10" },
+            { icons = { { "key", "R" } }, text = ja and "各項目をリセット" or "Reset each item" },
+            { icons = { { "key", "Enter" } }, text = ja and "決定" or "Confirm" },
+            { icons = { { "key", "ESC" }, { "sep", "/" }, { "key", "F1" } }, text = ja and "閉じる" or "Close" } } },
+        { label = ja and "マウス" or "Mouse", items = {
+            { icons = { { "mouse", "move" } }, text = ja and "項目選択" or "Select" },
+            { icons = { { "mouse", "left" } }, text = ja and "値の左側/右側で減らす/増やす（オン/オフは切替）" or "Left / right of a value: lower / raise (ON/OFF: toggle)" },
+            { icons = { { "mouse", "wheel" } }, text = ja and "値の変更" or "Adjust" },
+            { icons = { { "mouse", "right" } }, text = ja and "閉じる" or "Close" } } },
+    }
 end
 
--- Third help line of the main screen: the mouse.
-function M.mouse_help(japanese)
-    if japanese then
-        return "マウス: カーソルを合わせて選択、値の左側/右側をクリックで減らす/増やす（オン/オフはクリックで切替）、ホイールで値変更、右クリックで閉じる"
+-- UMG font sizes are points: the game draws text 96/72 as wide as text_width(label, size) estimates in pixels.
+M.PT = 96 / 72
+local function drawn_width(label, size) return M.text_width(label, size) * M.PT end
+M.drawn_width = drawn_width
+
+-- Icon sizes in screen units (the drawing code in ui.lua uses the same numbers).
+M.ICON = { h = 22, face = 22, bumper = 34, trigger = 30, stick = 22, dpad = 22, mouse = 16, key_min = 22, key_pad = 10, inner_gap = 3 }
+local MOUSE_ARROW = { move = "↔", wheel_up = "↑", wheel_down = "↓" }
+
+local function key_size(label) return (#label > 1 and label:match("^[%w]+$")) and 12 or 13 end
+
+function M.icon_width(kind, arg)
+    local I = M.ICON
+    if kind == "face" then return I.face end
+    if kind == "bumper" then return I.bumper end
+    if kind == "trigger" then return I.trigger end
+    if kind == "stick" then return I.stick end
+    if kind == "dpad" then return I.dpad end
+    if kind == "key" then return math.max(I.key_min, drawn_width(arg, key_size(arg)) + I.key_pad) end
+    if kind == "mouse" then
+        local arrow = MOUSE_ARROW[arg]
+        return I.mouse + (arrow and (3 + drawn_width(arrow, 12)) or 0)
     end
-    return "Mouse: point to select, click left / right of a value: lower / raise (ON/OFF: click), wheel: change, right click: close"
+    if kind == "hold" then return drawn_width(arg, 12) + 4 end
+    if kind == "sep" then return drawn_width(arg, 13) + 6 end
+    return 0
+end
+
+-- Lay the rows out. opts: x (left of the device labels), y (top of the first row), label_w (label column; nil =
+-- as wide as the widest device label at label_size + 14), row_h, max_right (nil = no limit), size (description
+-- font size), gap (space between items). Widths are the drawn widths (points, see M.PT).
+-- If a row would pass max_right the description size shrinks (to 11) and then the gap (to 8).
+-- Returns ops (drawing instructions with absolute positions), the right edge used, and the size / gap chosen.
+-- ops: { op = "label", x, y, text } | { op = "icon", kind, arg, x, y, w, arrow?, key_size? } | { op = "text", x, y, text, size }
+function M.layout_help(rows, japanese, opts)
+    local colon = japanese and "：" or ": "
+    local function row_width(row, size, gap)
+        local width = 0
+        for index, item in ipairs(row.items) do
+            if index > 1 then width = width + gap end
+            for i, icon in ipairs(item.icons) do
+                if i > 1 then width = width + M.ICON.inner_gap end
+                width = width + M.icon_width(icon[1], icon[2])
+            end
+            width = width + 2 + drawn_width(colon .. item.text, size)
+        end
+        return width
+    end
+    local size, gap = opts.size or 13, opts.gap or 14
+    local label_w = opts.label_w
+    if not label_w then
+        label_w = 0
+        for _, row in ipairs(rows) do label_w = math.max(label_w, drawn_width(row.label, opts.label_size or 13)) end
+        label_w = math.ceil(label_w + 14)
+    end
+    local start = opts.x + label_w
+    if opts.max_right then
+        local function widest() local w = 0 for _, row in ipairs(rows) do w = math.max(w, row_width(row, size, gap)) end return w end
+        while start + widest() > opts.max_right and size > 11 do size = size - 1 end
+        while start + widest() > opts.max_right and gap > 8 do gap = gap - 1 end
+    end
+    local ops, right = {}, start
+    for r, row in ipairs(rows) do
+        local y = opts.y + (r - 1) * opts.row_h
+        ops[#ops + 1] = { op = "label", x = opts.x, y = y, text = row.label }
+        local x = start
+        for index, item in ipairs(row.items) do
+            if index > 1 then x = x + gap end
+            for i, icon in ipairs(item.icons) do
+                if i > 1 then x = x + M.ICON.inner_gap end
+                local w = M.icon_width(icon[1], icon[2])
+                ops[#ops + 1] = { op = "icon", kind = icon[1], arg = icon[2], x = x, y = y, w = w,
+                    arrow = icon[1] == "mouse" and MOUSE_ARROW[icon[2]] or nil, key_size = icon[1] == "key" and key_size(icon[2]) or nil }
+                x = x + w
+            end
+            local label = colon .. item.text
+            ops[#ops + 1] = { op = "text", x = x + 2, y = y, text = label, size = size }
+            x = x + 2 + drawn_width(label, size)
+        end
+        right = math.max(right, x)
+    end
+    return ops, right, size, gap
 end
 
 -- Where every row of the main screen sits inside the panel (the renderer and the mouse share this):

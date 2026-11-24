@@ -162,14 +162,49 @@ do
     check("action label", model.action_label("camera_screen", true) ~= model.action_label("camera_screen", false))
     check("action label has no key hint", model.action_label("camera_screen", true) == "カメラ位置変更画面を開く"
         and model.action_label("camera_screen", false) == "Open camera position screen")
-    -- footer help: confirm sits just left of close, ESC is upper case, and each line fits the 920 px panel interior
+    -- control help as "icon: description": the items asked for, and every line fits its panel
     for _, ja in ipairs({ true, false }) do
-        local pad_help, key_help = model.footer_help(ja)
-        check("footer pad: confirm before close (" .. tostring(ja) .. ")", pad_help:find(ja and "Aで決定、Bで閉じる" or "A: confirm, B: close", 1, true) ~= nil)
-        check("footer keys: confirm before close (" .. tostring(ja) .. ")", key_help:find(ja and "Enterで決定、ESCかF1で閉じる" or "Enter: confirm, ESC or F1: close", 1, true) ~= nil)
-        check("footer has no mixed-case Esc", not key_help:find("Esc", 1, true) and not pad_help:find("Esc", 1, true))
-        check("footer lines fit at size 13", model.text_width(pad_help, 13) <= 920 and model.text_width(key_help, 13) <= 920,
-            model.text_width(pad_help, 13) .. "/" .. model.text_width(key_help, 13))
+        local main_rows = model.help_rows("main", ja)
+        check("main help: pad, keyboard, mouse (" .. tostring(ja) .. ")", #main_rows == 3)
+        local texts = {}
+        for _, row in ipairs(main_rows) do for _, item in ipairs(row.items) do texts[#texts + 1] = item.text end end
+        local joined = table.concat(texts, "|")
+        check("main help: reset reads 'each item' (" .. tostring(ja) .. ")", joined:find(ja and "各項目をリセット" or "Reset each item", 1, true) ~= nil)
+        check("main help: wheel changes the value (" .. tostring(ja) .. ")", main_rows[3].items[3].icons[1][2] == "wheel" and main_rows[3].items[3].text == (ja and "値の変更" or "Adjust"))
+        check("main help: confirm before close (" .. tostring(ja) .. ")", main_rows[1].items[5].icons[1][2] == "A" and main_rows[1].items[6].icons[1][2] == "B")
+        -- footer: the panel grows to the widest help line; it must still fit a 1920-unit wide screen
+        local ops, right = model.layout_help(main_rows, ja, { x = 30, y = 0, label_size = 13, row_h = 34, size = 13, gap = 14 })
+        check("main help fits a 1920 screen (" .. tostring(ja) .. ")", right + 30 <= 1800, right)
+        local label_w = 0
+        for _, row in ipairs(main_rows) do label_w = math.max(label_w, model.drawn_width(row.label, 13)) end
+        check("icons start right of the widest device label (" .. tostring(ja) .. ")", ops[2].x >= 30 + label_w + 8, ops[2].x)
+        -- nothing overlaps: each op starts where the one before it ended
+        local overlap = false
+        for i = 2, #ops do
+            local a, b = ops[i - 1], ops[i]
+            if a.y == b.y and a.op ~= "label" then
+                local a_end = a.x + (a.w or model.drawn_width(a.text or "", a.size or 13))
+                if b.x < a_end - 0.01 then overlap = true end
+            end
+        end
+        check("help ops do not overlap (" .. tostring(ja) .. ")", not overlap)
+        local icons, texts_n = 0, 0
+        for _, op in ipairs(ops) do if op.op == "icon" then icons = icons + 1 elseif op.op == "text" then texts_n = texts_n + 1 end end
+        check("main help ops (" .. tostring(ja) .. ")", texts_n == 16 and icons >= 20, texts_n .. "/" .. icons)
+        local cam_rows = model.help_rows("camera", ja)
+        local cops, cright = model.layout_help(cam_rows, ja, { x = 16, y = 48, label_size = 14, row_h = 36, size = 14, gap = 16 })
+        check("camera help stays left of the values panel (" .. tostring(ja) .. ")", 30 + cright + 24 < 1920 - 30 - 330 - 20, cright)
+        check("camera help: reset all is a hold (" .. tostring(ja) .. ")", cam_rows[1].items[7].icons[2][1] == "hold" and cam_rows[2].items[6].icons[2][1] == "hold")
+        check("camera help: wheel down nearer, up farther", cam_rows[3].items[2].icons[1][2] == "wheel_down" and cam_rows[3].items[3].icons[1][2] == "wheel_up")
+        local first = cops[2]
+        check("layout: first icon right of the label column", first.op == "icon" and first.x > 16 + model.drawn_width(cam_rows[2].label, 14), first.x)
+    end
+    do -- shrinking: a tight limit lowers the text size, then the gap, never below 11 / 8
+        local rows = model.help_rows("main", true)
+        local _, _, size, gap = model.layout_help(rows, true, { x = 30, y = 0, label_w = 78, row_h = 34, max_right = 900, size = 13, gap = 14 })
+        check("layout shrinks text then gap", size == 11 and gap == 8, size .. "/" .. gap)
+        check("key icon width grows with its label", model.icon_width("key", "Enter") > model.icon_width("key", "R"))
+        check("short key icon is square", model.icon_width("key", "R") == model.ICON.key_min)
     end
     -- the main screen shows every row at once: 4 headings x 30 + 13 rows x 32 px must leave room in a 1080 px screen
     do
@@ -178,10 +213,7 @@ do
         local panel_h = 62 + heads * 30 + others * 32 + 10 + 134
         check("all rows fit the panel without scrolling", panel_h <= 800, panel_h)
     end
-    -- mouse: help line fits, and the hit test finds the rows the renderer draws
-    for _, ja in ipairs({ true, false }) do
-        check("mouse help fits at size 13 (" .. tostring(ja) .. ")", model.text_width(model.mouse_help(ja), 13) <= 920, model.text_width(model.mouse_help(ja), 13))
-    end
+    -- mouse: the hit test finds the rows the renderer draws
     do
         local layout, bottom = model.row_layout(rows, 62, 30, 32)
         local expect_bottom = 62
