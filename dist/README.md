@@ -1,4 +1,4 @@
-# Tormented Souls 2 - Third-Person Camera (TS2TPSCamera) v0.9.1
+# Tormented Souls 2 - Third-Person Camera (TS2TPSCamera) v0.9.2
 
 Turns the fixed-camera game **Tormented Souls 2** into a third-person game: the camera follows the
 character from behind and you can look all the way around with the mouse or the right stick.
@@ -55,14 +55,17 @@ If the game does not start or the camera does not change, see "Troubleshooting".
 | Action | Gamepad | Keyboard / mouse |
 | --- | --- | --- |
 | Look | Right stick | Mouse |
-| Move (camera relative) | Left stick | W A S D |
-| Weapon select | D-pad | Number keys 1-4 (as in the original) |
+| Move (camera relative) | Left stick | W A S D (walk) |
+| Run | Push the left stick fully | Shift + W A S D (as in the original) |
+| Weapon select | D-pad | Number keys 1-4 (as in the original), mouse wheel (next / previous) |
 | Put the camera behind the character | Right stick click | - |
 | Flashlight on/off | Left stick click | F (as in the original) |
 | Settings screen | - | F1 |
 
 - While the TPS camera is on, the D-pad no longer does tank-style movement; it only selects weapons.
 - The right stick turns the camera, so the original "right stick = weapon shortcut" is moved to the D-pad.
+- The mouse wheel goes through the four weapon shortcut slots in the order of the number keys 1-4 and skips
+  empty slots.
 - While the original fixed camera is active (TPS switched off, movies, puzzles ...) all controls are the
   game's own.
 
@@ -73,9 +76,12 @@ If the game does not start or the camera does not change, see "Troubleshooting".
 - **Look (gamepad)**: right-stick sensitivity (left/right, up/down), dead zone, invert left/right, invert up/down.
 - **Look (mouse)**: mouse sensitivity (left/right, up/down), invert left/right, invert up/down.
 - **Camera position screen**: distance, height, side offset and field of view, adjusted live while you see
-  the character. Hold X / R to reset.
-- Gamepad: D-pad up/down = item, left/right = value, RB/LB = x10, X = reset the item, A = confirm, B = close.  
-  Keyboard: arrows = item / value, PgUp/PgDn = x10, R = reset the item, Enter = confirm, ESC or F1 = close.
+  the character. Mouse wheel: nearer / farther. Hold X / R to reset all four. B, ESC or a right click goes back.
+- Gamepad: D-pad up/down = item, left/right = value, RB/LB = x10, X = reset each item, A = confirm, B = close.
+  Keyboard: arrows = item / value, PgUp/PgDn = x10, R = reset each item, Enter = confirm, ESC or F1 = close.
+  Mouse: point at an item to select it, click the left / right side of a value to lower / raise it (ON/OFF
+  toggles on a click), wheel = change the value, right click or the x in the corner = close.
+- The controls are shown on the screen as button icons.
 - The game is paused while a settings screen is open. Values are saved to
   `ue4ss\Mods\TS2TPSCamera\settings_values.lua`.
 
@@ -97,7 +103,7 @@ If the game does not start or the camera does not change, see "Troubleshooting".
 ## Troubleshooting
 
 - Look at `Win64\ue4ss\UE4SS.log` and search for `[TS2TPS]`. The line
-  `[TS2TPS] loaded v0.9.1 ...` means the mod started.
+  `[TS2TPS] loaded v0.9.2 ...` means the mod started.
 - No `[TS2TPS]` lines: UE4SS is not loading the mod. Check that `dwmapi.dll` and `ue4ss\UE4SS.dll` are where
   step 2 says, and that `TS2TPSCamera\enabled.txt` exists.
 - `[TS2TPS]` lines about a missing function / `LoopInGameThreadWithDelay`: your UE4SS build is too old.

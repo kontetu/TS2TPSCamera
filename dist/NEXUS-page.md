@@ -2,7 +2,7 @@
 
 Suggested mod name: **Third-Person Camera**  (game: Tormented Souls 2)
 Suggested category: Gameplay / Camera
-Version: 0.9.1
+Version: 0.9.2
 
 ## Short summary (one or two sentences)
 
@@ -52,11 +52,12 @@ Gamepad controls are written for an **Xbox-style controller (XInput)**; the butt
 | Action | Gamepad (Xbox controller) | Keyboard / mouse |
 | --- | --- | --- |
 | Look | Right stick | Mouse |
-| Move | Left stick | WASD |
-| Weapon select | D-pad | 1-4 |
+| Move | Left stick | WASD (walk) |
+| Run | Push the left stick fully | Shift + WASD |
+| Weapon select | D-pad | 1-4, mouse wheel |
 | Camera behind the character | Right stick click | - |
 | Flashlight | Left stick click | F |
-| Settings | - | F1 |
+| Settings | - | F1 (mouse works on the screen too) |
 
 ## Uninstall
 

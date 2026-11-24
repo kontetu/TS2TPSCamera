@@ -40,18 +40,19 @@ Tested with a clean install of exactly that zip. The older v3.0.0 / v3.0.1 tag r
 Gamepad controls are written for an [b]Xbox-style controller (XInput)[/b]; the button names below are Xbox names.
 [list]
 [*]Look: Xbox controller right stick (RS) / mouse
-[*]Move: Xbox controller left stick (LS) / WASD (camera relative)
-[*]Weapon select: Xbox controller D-pad / number keys 1-4
+[*]Move: Xbox controller left stick (LS) / WASD (camera relative). WASD walks; hold Shift to run (as in the original).
+[*]Weapon select: Xbox controller D-pad / number keys 1-4 / mouse wheel (next / previous)
 [*]Camera behind the character: Xbox controller right stick click (RS)
 [*]Flashlight: Xbox controller left stick click (LS) / F (keyboard)
-[*]Settings screen: F1 (keyboard). Inside it: D-pad up/down = item, left/right = value, RB/LB = x10, X = reset the item, A = confirm, B = close. Keyboard: arrows, PgUp/PgDn = x10, R = reset the item, Enter = confirm, ESC or F1 = close.
+[*]Settings screen: F1 (keyboard). The controls are shown as button icons. Gamepad: D-pad up/down = item, left/right = value, RB/LB = x10, X = reset each item, A = confirm, B = close. Keyboard: arrows, PgUp/PgDn = x10, R = reset each item, Enter = confirm, ESC or F1 = close. Mouse: point to select, click left / right of a value to lower / raise it, wheel = change, right click = close.
+[*]Camera position screen: D-pad / arrows = move the camera, LB/RB or PgDn/PgUp or the mouse wheel = nearer / farther, LT/RT or Q/E = FOV, hold X / R = reset all, B / ESC / right click = back.
 [/list]
 
 [size=4][b]Uninstall[/b][/size]
 Delete [b]Win64\ue4ss\Mods\TS2TPSCamera[/b] (and dwmapi.dll + the ue4ss folder if you want UE4SS gone too). To disable only this mod, delete or rename its enabled.txt.
 
 [size=4][b]Troubleshooting / bug reports[/b][/size]
-Open Win64\ue4ss\UE4SS.log and search for [TS2TPS]. The line "[TS2TPS] loaded v0.9.1" means the mod started. Please attach the [TS2TPS] lines when reporting a problem.
+Open Win64\ue4ss\UE4SS.log and search for [TS2TPS]. The line "[TS2TPS] loaded v0.9.2" means the mod started. Please attach the [TS2TPS] lines when reporting a problem.
 
 [size=4][b]Credits[/b][/size]
 [list]

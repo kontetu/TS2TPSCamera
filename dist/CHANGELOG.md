@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.2 - 2026-11-24
+
+- Keyboard: W/A/S/D now walk; Shift + W/A/S/D runs, following the game's own run button as in the fixed camera.
+- Mouse wheel switches to the next / previous weapon of the four shortcut slots (order of the number keys 1-4,
+  empty slots skipped).
+- F1 settings screen works with the mouse: point to select, click the left / right side of a value, wheel,
+  right click or the x to close. On the camera position screen the wheel moves the camera nearer / farther and a
+  right click goes back.
+- The control help on both screens is drawn as button icons ("icon: description") for the gamepad, keyboard and
+  mouse; the panels widen to fit it.
+- Fixed: closing the settings screen with ESC also opened the game's pause menu.
+- Fixed: with a gamepad, A sometimes had to be pressed twice, or clicked the row under the hidden mouse cursor.
+- Camera position defaults (also what "reset all" restores): distance 120, height 52, side 24, FOV 72.
+
 ## 0.9.1 - 2026-11-20
 
 - Fixed: near the dimension mirror and after crossing it (in both worlds) the camera kept falling back to the

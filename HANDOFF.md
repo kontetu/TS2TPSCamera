@@ -77,6 +77,8 @@ Tormented Souls 2 を TPS 視点にする UE4SS Lua MOD。最終更新 2026-11-0
 - 0.9.0: 2026-11-07 公開（GitHub、Nexus mod 12）。
 - 0.9.1（2026-11-20）: 次元の鏡で固定カメラに戻る／F1 が開かない不具合（残ったパズルフラグ `isInteractingWithPuzzleComp` を、`CurrentPuzzle`・`bIsInsideInteraction`・`isSolvingPuzzle` のどれかが立っているときだけ有効にした）と、暗闇の演出（`BPC_DarknessSystem.LoadMaterialToCameras` が `BP_RailCamera` のカメラにだけ付ける `DarknessSystem_Mat` を `FollowCamera` にも `AddOrUpdateBlendable` で付けた）を修正。ゲームの 2026年11月アップデート版（exe `FB761DAB...`）で確認。
 
+- 0.9.2（2026-11-24）: キーボードの歩き / Shift で走る（ゲームの `IsRunningTankMode` に従う）、マウスホイールで武器切り替え（`Inventory.Shortcuts` は先頭が中央枠、続いて上・右・下・左）、F1 画面のマウス操作と操作説明のアイコン化。ESC で一時停止画面が出る問題（`IA_Pause` は `IMC_InGame*` にある。画面中は外し、閉じたら `SwitchMapToInGame`）と、パッドの A がカーソル位置の左クリックに変わる問題（CommonUI のゲームパッドカーソル。パッド使用中はクリックを A として扱う）を修正。UMG の文字サイズはポイント（描画幅は 96/72 倍）。カメラ位置の既定値 120/52/24/72。
+
 ### 0.9.0 の記録
 
 - zip は作成・内容検証済み。**クリーン導入テスト済み（2026-11-07）**: 公式 experimental-latest の `UE4SS_v3.0.1-1217-g4fb9b615.zip` だけを入れ、配布 zip を README どおりに導入 → 起動、MOD 読込（`loaded v0.9.0`）、TPS ON、F1 設定画面、TPS の OFF/ON 切替、設定の保存まで動作。UE4SS のエラー行 `Failed to expose size of FObjectPtrProperty` は UE4SS 側のメッセージで MOD は影響なし。
